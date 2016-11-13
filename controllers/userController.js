@@ -37,6 +37,11 @@ server.get("/user/:id", function(req, res, next) {
 
 	// Put endpoint to update a record
 	server.put("/user/:id", function(req, res, next) {
+	req.assert('id', 'id is required and must be numeric').notEmpty().isInt();
+	var errors = req.validationErrors();
+		if (errors) {
+			helpers.failure(res, next, errors[0], 400);
+	}
 			if (typeof(users[req.params.id]) === 'undefined') {
 			helper.failure(res, next, 'The specified user could not be found in the database', 404);
 	}
@@ -52,6 +57,11 @@ server.get("/user/:id", function(req, res, next) {
 
 	// DELETE a user
 	server.del("user/:id", function(req, res, next) {
+		req.assert('id', 'id is required and must be numeric').notEmpty().isInt();
+		var errors = req.validationErrors();
+			if (errors) {
+				helpers.failure(res, next, errors[0], 400);
+	}
 		if (typeof(users[req.params.id]) === 'undefined') {
 			helper.failure(res, next, 'The specified user could not be found in the database', 404);
 	}
@@ -63,6 +73,14 @@ server.get("/user/:id", function(req, res, next) {
 
 	//if POST is made to the /user endpoint, this will work
 	server.post("/user", function(req, res, next) {
+		req.assert('first_name', 'First Name is required').notEmpty();
+		req.assert('last_name', 'Last Name is required').notEmpty();
+		req.assert('email_address', 'Email address is required and must be a valid email').notEmpty().isEmail();
+		req.assert('career', 'Career is required and must be student, teacher, or professor').isIn(['student', 'teacher', 'professor']);
+		var errors = req.validationErrors();
+			if (errors) {
+				helpers.failure(res, next, errors, 400);
+			}
 		// the parameters that come in via the HTTP request will define our user
 		// this will be an array
 		var user = req.params;
