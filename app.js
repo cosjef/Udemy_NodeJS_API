@@ -3,9 +3,10 @@ var server = restify.createServer();
 var morgan = require('morgan');
 var setupController = require('./controllers/setupController.js');
 var userController = require('./controllers/userController.js');
+var restifyValidator = require('restify-validator');
 
 
-setupController(server, restify);
+setupController(server, restify, restifyValidator);
 userController(server);
 
 // use morgan to log requests to the console

@@ -12,11 +12,22 @@ module.exports = function(server) {
 // If the root URL is requested
 server.get("/", function(req, res, next) {
 	helpers.success(res, next, users);
+	return next();
 })
 
 
 // Get a specific user ID
 server.get("/user/:id", function(req, res, next) {
+	// the name of the parameter you are validating is subject assert
+	// assert that the ID requeest variable is not empty and is an integer
+	req.assert('id', 'id is required and must be numeric').notEmpty().isInt();
+	// Check if there were errors
+	var errors = req.validationErrors();
+	// if there were errors, pass the response object and the error encountered
+	// send a 400 response code if fields not correct
+	if (errors) {
+		helpers.failure(res, next, errors[0], 400);
+	}
 	if (typeof(users[req.params.id]) === 'undefined') {
 	   helpers.failure(res, next, 'The specified user could not be found in the database', 404);
 	}
