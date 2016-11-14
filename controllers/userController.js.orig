@@ -82,22 +82,22 @@ server.get("/user/:id", function(req, res, next) {
 			if (errors) {
 				helpers.failure(res, next, errors, 400);
 			}
-		
-		// create a new instance of our User model
-		var user = new UserModel();
-		// set the first_name property of the user object to what we get from the inbound request
-		user.first_name = req.params.first_name;
-		user.last_name = req.params.last_name;
-		user.email_address = req.params.email_address;
-		user.career = req.params.career;
-		// user.save is a Mongoose function to save a user
-		// takes an error function if we are unable to save the user in the database
-		user.save(function (err) {
-			if (err){
-			helpers.failure(res, next, errors, 500);
-		}
-		})
-		helpers.success(res, next, user);
+		// the parameters that come in via the HTTP request will define our user
+		// this will be an array
+		var user = req.params;
+		// increment max user id counter
+		max_user_id++;
+		// set id of new user is whatever the current max user id is
+		user.id = max_user_id;
+		// users array consists of all users
+		// add this user to our array of all users
+		// key for this user is his unique user id, and the data is from the request
+		users[user.id] = user;
+		res.setHeader('content-type', 'application/json');
+		res.writeHead(200);
+		// respond with JSON string information about the user we just created
+		res.end(JSON.stringify(users));
+		return next();
 	})
 
 }
