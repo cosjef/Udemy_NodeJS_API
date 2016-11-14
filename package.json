@@ -9,6 +9,7 @@
   "author": "Jeff Costa",
   "license": "ISC",
   "dependencies": {
+    "mongod": "^1.3.0",
     "morgan": "^1.7.0",
     "nodemon": "^1.11.0",
     "restify": "^4.2.0",
