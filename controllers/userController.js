@@ -2,26 +2,24 @@ var helpers = require('../config/helperFunctions.js');
 var UserModel = require('../models/UserModel.js');
 
 
-// array of users
-// fake database
-var users = {};
-var max_user_id = 0;
-
-
 module.exports = function(server) {
 
 // If the root URL is requested
+// Lists out all the users
 server.get("/", function(req, res, next) {
-	helpers.success(res, next, users);
-	return next();
-})
+	// find will find all users
+	// searching by no conditions means "find everyone"
+	UserModel.find({}, function (err, users){
+		helpers.success(res, next, users);
+	});
+});
 
 
 // Get a specific user ID
 server.get("/user/:id", function(req, res, next) {
 	// the name of the parameter you are validating is subject assert
 	// assert that the ID requeest variable is not empty and is an integer
-	req.assert('id', 'id is required and must be numeric').notEmpty().isInt();
+	req.assert('id', 'id is required and must be numeric').notEmpty();
 	// Check if there were errors
 	var errors = req.validationErrors();
 	// if there were errors, pass the response object and the error encountered
@@ -29,10 +27,16 @@ server.get("/user/:id", function(req, res, next) {
 	if (errors) {
 		helpers.failure(res, next, errors[0], 400);
 	}
-	if (typeof(users[req.params.id]) === 'undefined') {
-	   helpers.failure(res, next, 'The specified user could not be found in the database', 404);
-	}
-	helpers.success(res, next, users[parseInt(req.params.id)])
+	// ID is equal to whatever is coming in in the request
+	UserModel.findOne({ _id: req.params.id }, function (err, user){
+		if (err) {
+			helpers.failure(res, next, 'Something went wrong while fetching the user from the database', 500);
+		}
+		if (user === null) {
+			helpers.failure(res, next, 'The specified user could not be found', 404);
+		}
+		helpers.success(res, next, user);
+	});
 });
 
 
