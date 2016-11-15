@@ -8,7 +8,7 @@ var restifyValidator = require('restify-validator');
 var config = require('./config/dbConnections.js');
 var mongoose = require('mongoose');
 
-
+mongoose.Promise = global.Promise;
 mongoose.connect(config.getMongoConnection());
 
 

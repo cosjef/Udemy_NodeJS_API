@@ -42,38 +42,66 @@ server.get("/user/:id", function(req, res, next) {
 
 	// Put endpoint to update a record
 	server.put("/user/:id", function(req, res, next) {
-	req.assert('id', 'id is required and must be numeric').notEmpty().isInt();
+	req.assert('id', 'id is required and must be numeric').notEmpty();
+	// check to ensure there were no validation errors
 	var errors = req.validationErrors();
 		if (errors) {
 			helpers.failure(res, next, errors[0], 400);
 	}
-			if (typeof(users[req.params.id]) === 'undefined') {
-			helper.failure(res, next, 'The specified user could not be found in the database', 404);
-	}
-		var user = users[parseInt(req.params.id)];
-		// store the body of the put update in updates variable
+			
+	// find a user with a particular ID
+		UserModel.findOne({ _id: req.params.id }, function (err, user){
+		if (err) {
+			helpers.failure(res, next, 'Something went wrong while fetching the user from the database', 500);
+		}
+		if (user === null) {
+			helpers.failure(res, next, 'The specified user could not be found', 404);
+		}
 		var updates = req.params;
+		// ID is passed in; don't overwrite it
+		delete updates.id;
 		// Loop through whatever came in via the updates variable - an array of params
 		for (var field in updates) { 
 			user[field] = updates[field];
 		}
+			user.save(function (err) {
+			   helpers.failure(res, next, 'Error saving user to the database', 500);
+			});
 		helpers.success(res, next, user);
-	})
+		});
+		
+	});
 
 	// DELETE a user
-	server.del("user/:id", function(req, res, next) {
-		req.assert('id', 'id is required and must be numeric').notEmpty().isInt();
+	server.del("/user/:id", function(req, res, next) {
+		req.assert('id', 'Id is required and must be numeric').notEmpty();
 		var errors = req.validationErrors();
-			if (errors) {
-				helpers.failure(res, next, errors[0], 400);
-	}
-		if (typeof(users[req.params.id]) === 'undefined') {
-			helper.failure(res, next, 'The specified user could not be found in the database', 404);
-	}
-		delete users[parseInt(req.params.id)];
-		helpers.success(res, next, []);
-		return next();
-	})
+		if (errors) {
+			helpers.failure(res, next, errors[0], 400);
+			return next();
+		}
+	UserModel.findOne({ _id: req.params.id }, function (err, user) {
+		if (err) {
+			helpers.failure(res, next, 'Something went wrong while fetching the user from the database', 500);
+			return next();
+		}
+		if (user === null) {
+			helpers.failure(res, next, 'The specified user could not be found', 404);
+			return next();
+		}
+			user.remove(function (err) {
+				if (err) {
+			   		helpers.failure(res, next, 'Error removing user from the database', 500);
+			   		return next ();
+			}
+				helpers.success(res, next, user);
+				return next();
+			});
+		});
+	});
+
+
+	
 
 
 	//if POST is made to the /user endpoint, this will work
@@ -104,4 +132,4 @@ server.get("/user/:id", function(req, res, next) {
 		helpers.success(res, next, user);
 	})
 
-}
+	}
