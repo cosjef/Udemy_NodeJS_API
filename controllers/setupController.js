@@ -12,6 +12,26 @@ server.use(restifyValidator);
 server.use(restify.authorizationParser());
 
 
+// Block by IP address
+server.use(function(req, res, next) {
+	var whitelistedIps = ['111.222.333.444']
+	//  Check to see if they are behind a proxy
+	var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+	if (whitelistedIps.indexOf(ip) === -1) {
+		var response = {
+				'status': 'failure',
+				'data': 'Invalid IP address'
+			};
+			// Send our response to client
+			res.setHeader('content-type', 'application/json');
+			res.writeHead(403);
+			res.end(JSON.stringify(response));
+			return next();
+		}
+		return next();
+	});
+
+
 	// Test for and store API keys
  	server.use(function(req, res, next) {
 		var apiKeys = {
@@ -33,5 +53,16 @@ server.use(restify.authorizationParser());
 		}
 		return next();
 	});
+
+
+ 	server.use(restify.throttle( {
+ 		// allow one API call per second
+ 		rate: 1,
+ 		// allow 2 API calls burst
+ 		burst: 2,
+ 		// look at the X-Forwarded-For header
+ 		xff: true
+ 	}));
+
 
 }
